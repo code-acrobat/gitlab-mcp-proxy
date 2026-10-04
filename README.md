@@ -185,6 +185,11 @@ building hard tool denials:
   the same for `glab pipeline run *`, and `glab api *pipeline*` for play,
   retry, and cancel calls.
 
+This is a baseline, not a final, thought-through process. It reflects one
+setup and one set of assumptions; every enterprise has its own rules, and
+each tool and permission your organization grants needs a thorough
+inspection of its own before you rely on advice like this.
+
 ## Scope and maturity
 
 Deliberately minimal, same as its sibling: no version pinning (whatever
