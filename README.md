@@ -169,6 +169,15 @@ building hard tool denials:
   project access token with the Developer role scoped to the project;
   everything above narrows who may merge, not what the token can do
   elsewhere.
+- **Ask before variable lookups.** CI/CD variable values come back in
+  plaintext from `GET /projects/:id/variables` and `glab variable get` to
+  anyone with Maintainer access and an `api` token. Masked, hidden, and
+  protected only change job logs, the settings UI, and pipeline injection,
+  not API readback. Unless you are sure every project keeps real secrets
+  out of plain CI variables (with masked and hidden as the baseline for
+  the rest), pin `{ "action": "shell", "resource": "glab variable *",
+  "effect": "ask" }` and the same for `glab api *variables*` so a later
+  broad `shell` allow rule cannot wave them through.
 
 ## Scope and maturity
 
