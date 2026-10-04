@@ -196,6 +196,11 @@ Deliberately minimal, same as its sibling: no version pinning (whatever
 `node` and `glab` are on your `PATH`), no update checks or releases (`git
 pull` is the upgrade path), no CI/CD, no auto-restart, no npm package.
 
+This is a concept study: `glab` already covers the GitLab API surface for
+day-to-day work, and bespoke scripts wrapping that same API go further
+still. The proxy exists only to give MCP clients a loopback endpoint with
+host-side token injection inside sandboxes.
+
 ## License
 
 [MIT](./LICENSE) — free to use, copy, modify, merge, publish, distribute;
