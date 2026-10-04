@@ -178,6 +178,12 @@ building hard tool denials:
   the rest), pin `{ "action": "shell", "resource": "glab variable *",
   "effect": "ask" }` and the same for `glab api *variables*` so a later
   broad `shell` allow rule cannot wave them through.
+- **Ask before triggering pipelines.** A `when: manual` job is the human
+  decision point; the agent must not press play itself. GitLab MCP exposes
+  no pipeline tools today, but the shell does: pin
+  `{ "action": "shell", "resource": "glab ci run *", "effect": "ask" }`,
+  the same for `glab pipeline run *`, and `glab api *pipeline*` for play,
+  retry, and cancel calls.
 
 ## Scope and maturity
 
