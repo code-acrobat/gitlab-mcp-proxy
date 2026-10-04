@@ -143,6 +143,33 @@ Same model as github-mcp-proxy, port 3720:
 In short: every MCP client you point at this port holds your GitLab identity
 while it is connected. Keep that set small, keep the window short.
 
+## Production safeguards
+
+A hobby setup is one personal token and one human at the keyboard. For
+production projects, keep a human approving each next step instead of
+building hard tool denials:
+
+- **Ask is already the default.** opencode asks before a tool runs when no
+  permission rule matches, so no `permissions` block is needed: every
+  create, merge, or push call waits for you. Prefer staying on `ask` over
+  `deny` rules as long as a human approves the next step; add a deny only
+  for something nobody should ever run.
+- **Keep merge rights on the forge, not in the client.** On GitLab:
+  protected branch `main` with "Allowed to merge" set to maintainers while
+  the token behind the proxy stays a project access token with the
+  Developer role, merge request approvals with "prevent approval by
+  author", and merge checks requiring a successful pipeline. These hold
+  even when an `ask` is clicked through without much thought.
+- **Skip draft-only rules; keep CI in the loop.** Draft MRs often sit
+  outside the pipeline checks that should pass before a human reviewer is
+  bothered. Open a real MR, let CI go green, and state "human review
+  required" in the description instead.
+- **Token scope is the ceiling.** The OAuth token behind `glab` carries
+  your full role on every project you can access. For production use a
+  project access token with the Developer role scoped to the project;
+  everything above narrows who may merge, not what the token can do
+  elsewhere.
+
 ## Scope and maturity
 
 Deliberately minimal, same as its sibling: no version pinning (whatever
