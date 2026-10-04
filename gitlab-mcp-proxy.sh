@@ -5,8 +5,10 @@ SELF=gitlab-mcp-proxy.mjs
 PORT=3720
 LOG=/tmp/opencode/gitlab-mcp-proxy.log
 
-# match the node process only, never a shell/editor whose cmdline merely mentions the file
-pid() { pgrep -f "[n]ode.*gitlab-mcp-proxy\.mjs"; }
+# match the proxy process only: argv[0] ends in `node` (mise shim execs the
+# real binary path), argv[1] is exactly this script; a shell running
+# `node --check gitlab-mcp-proxy.mjs` or an editor mentioning the file never matches
+pid() { pgrep -f "^(.*/)?node [^ ]*/gitlab-mcp-proxy\.mjs$"; }
 
 case "${1:-}" in
   up)
