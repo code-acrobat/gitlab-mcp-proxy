@@ -24,6 +24,7 @@ request time, and is never written to disk or passed into the sandbox.
 |------|------------|
 | `gitlab-mcp-proxy.mjs` | the proxy: node, no dependencies, listens on `127.0.0.1:3720/mcp` |
 | `gitlab-mcp-proxy.sh`  | control script: `up`, `down`, `status` |
+| `gitlab-mcp-proxy.rules.json` | call-filtering rules (ships empty); read once at startup |
 
 ## Install
 
@@ -31,7 +32,7 @@ Prerequisites: `node`, and `glab` logged in (`glab auth status` must succeed
 on the host).
 
 ```sh
-cp gitlab-mcp-proxy.mjs gitlab-mcp-proxy.sh ~/.local/bin/
+cp gitlab-mcp-proxy.mjs gitlab-mcp-proxy.sh gitlab-mcp-proxy.rules.json ~/.local/bin/
 chmod +x ~/.local/bin/gitlab-mcp-proxy.mjs ~/.local/bin/gitlab-mcp-proxy.sh
 
 gitlab-mcp-proxy.sh up        # starts it in the background (nohup)
@@ -39,7 +40,8 @@ gitlab-mcp-proxy.sh status    # prints pid + probes the port (exit 1 = down)
 gitlab-mcp-proxy.sh down
 ```
 
-Log: `/tmp/opencode/gitlab-mcp-proxy.log` (startup lines only). Started by
+Log: `/tmp/opencode/gitlab-mcp-proxy.log` (startup lines and blocked
+calls). Started by
 hand on purpose: no systemd unit, it dies on reboot or logout, so run `up`
 again after one.
 
@@ -142,6 +144,46 @@ Same model as github-mcp-proxy, port 3720:
 
 In short: every MCP client you point at this port holds your GitLab identity
 while it is connected. Keep that set small, keep the window short.
+
+## Call filtering
+
+The proxy can rule on `tools/call` requests before they reach GitLab.
+Rules live in `gitlab-mcp-proxy.rules.json`, next to the installed script,
+and are read once at startup — edit the file, then
+`gitlab-mcp-proxy.sh down && gitlab-mcp-proxy.sh up` to apply.
+
+```json
+{
+  "schema": "gitlab.com/api/v4/mcp",
+  "deny_tools": ["merge_merge_request"],
+  "deny_calls": [
+    { "tool": "some_tool", "if": { "action": "approve" }, "reason": "approvals are human-only" }
+  ]
+}
+```
+
+- `deny_tools` — tool blocked outright, checked first.
+- `deny_calls` — exact tool name plus subset match on `if`: every listed
+  pair must equal the call's arguments (extra arguments do not stop a
+  match). First match wins; `reason` lands in the error and the log line.
+- A blocked call gets a local JSON-RPC error
+  (`blocked by gitlab-mcp-proxy policy: ...`), one log line, and never
+  reaches GitLab — the blocked path skips the token lookup.
+
+**Rules fail open.** A missing file forwards everything, malformed
+entries are dropped and logged at startup, and a renamed upstream tool
+silently disarms its rule. Validate a rule against the live `tools/list`
+schema before trusting it (the same initialize-handshake probe as in the
+github-mcp-proxy rules skill), and record what you validated against in
+`schema`.
+
+**The shipped file is empty on purpose.** The GitLab-side gate (above)
+currently answers `403 ... not enabled`, so the live tool names could not
+be verified from this setup, and shipping unverified names would produce
+rules that never match. Fill the file once `tools/list` answers.
+
+Scope: MCP path only — shell `glab` calls bypass the proxy entirely, and
+JSON-RPC batches pass through untouched.
 
 ## Production safeguards
 
