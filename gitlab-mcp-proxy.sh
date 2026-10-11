@@ -2,7 +2,7 @@
 # up | down | status for the GitLab MCP loopback proxy (gitlab-mcp-proxy.mjs)
 set -u
 SELF=gitlab-mcp-proxy.mjs
-PORT=3720
+PORT=3721
 LOG=/tmp/opencode/gitlab-mcp-proxy.log
 
 # match the proxy process only: argv[0] ends in `node` (mise shim execs the

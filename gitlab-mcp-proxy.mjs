@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // GitLab MCP -> loopback bridge (fork of github-mcp-proxy).
 // Token stays on the host (glab web-login config); the omac sandbox only
-// ever sees http://127.0.0.1:3720/mcp and never the credential.
+// ever sees http://127.0.0.1:3721/mcp and never the credential.
 // ponytail: plain nohup start; promote to a systemd user unit if it must survive reboots.
 import http from "node:http"
 import https from "node:https"
@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
-const PORT = 3720
+const PORT = Number(process.env.PORT || 3721)
 // Override for self-managed: GITLAB_MCP_URL=https://gitlab.example.com/api/v4/mcp
 const TARGET = new URL(process.env.GITLAB_MCP_URL || "https://gitlab.com/api/v4/mcp")
 const HOP = new Set([
@@ -75,16 +75,35 @@ http.createServer((req, res) => {
   req.on("end", () => {
     const raw = Buffer.concat(chunks)
     // Buffer requests only so tools/call can be ruled on; forward raw bytes.
-    // ponytail: JSON-RPC batches and unparseable bodies pass through untouched
+    // Every tools/call must face policy on its own - a denied call must not
+    // ride in past the rules hidden inside a batch or behind a bad body.
     let reason = null
     let id = null
-    try {
-      const body = JSON.parse(raw)
-      if (!Array.isArray(body)) {
+    let body = null
+    if (raw.length) {
+      try {
+        body = JSON.parse(raw.toString("utf8"))
+      } catch {
+        // Non-empty body that is not one JSON value: not a valid MCP request,
+        // and unscannable = unverifiable. Refuse instead of forwarding blind.
+        reason = "unparseable body"
+      }
+    }
+    if (body && typeof body === "object") {
+      if (Array.isArray(body)) {
+        const calls = body.filter((m) => m && m.method === "tools/call")
+        for (const c of calls) {
+          const r = blockedReason(c)
+          if (r) {
+            reason = `batch hides a tools/call (${r})`
+            break
+          }
+        }
+      } else {
         reason = blockedReason(body)
         id = body?.id ?? null
       }
-    } catch {}
+    }
     if (reason) {
       console.log(`${new Date().toISOString()} blocked tools/call: ${reason}`)
       res.writeHead(200, { "content-type": "application/json" })
