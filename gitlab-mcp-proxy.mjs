@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
-const PORT = 3721
+const PORT = Number(process.env.PORT || 3721)
 // Override for self-managed: GITLAB_MCP_URL=https://gitlab.example.com/api/v4/mcp
 const TARGET = new URL(process.env.GITLAB_MCP_URL || "https://gitlab.com/api/v4/mcp")
 const HOP = new Set([

@@ -22,9 +22,11 @@ request time, and is never written to disk or passed into the sandbox.
 
 | file | what it is |
 |------|------------|
-| `gitlab-mcp-proxy.mjs` | the proxy: node, no dependencies, listens on `127.0.0.1:3721/mcp` |
+| `gitlab-mcp-proxy.mjs` | the proxy: node, no dependencies, listens on `127.0.0.1:3721/mcp` (override with `PORT`) |
 | `gitlab-mcp-proxy.sh`  | control script: `up`, `down`, `status` |
 | `gitlab-mcp-proxy.rules.json` | call-filtering rules (ships empty); read once at startup |
+| `AGENTS.md` | invariants + how to fill rules once the endpoint answers |
+| `tests/smoke.sh` | offline request-side policy smoke test |
 
 ## Install
 
