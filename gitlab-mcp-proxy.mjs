@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // GitLab MCP -> loopback bridge (fork of github-mcp-proxy).
 // Token stays on the host (glab web-login config); the omac sandbox only
-// ever sees http://127.0.0.1:3720/mcp and never the credential.
+// ever sees http://127.0.0.1:3721/mcp and never the credential.
 // ponytail: plain nohup start; promote to a systemd user unit if it must survive reboots.
 import http from "node:http"
 import https from "node:https"
@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
-const PORT = 3720
+const PORT = 3721
 // Override for self-managed: GITLAB_MCP_URL=https://gitlab.example.com/api/v4/mcp
 const TARGET = new URL(process.env.GITLAB_MCP_URL || "https://gitlab.com/api/v4/mcp")
 const HOP = new Set([

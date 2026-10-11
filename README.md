@@ -7,7 +7,7 @@ environment, or sandbox. Fork of
 
 ```
 opencode / omac sandbox
-        |  http://127.0.0.1:3720/mcp        (all it can reach)
+        |  http://127.0.0.1:3721/mcp        (all it can reach)
         v
 gitlab-mcp-proxy.mjs  (runs on the HOST)
         |  adds "Authorization: Bearer $(glab config get token)" per request
@@ -22,7 +22,7 @@ request time, and is never written to disk or passed into the sandbox.
 
 | file | what it is |
 |------|------------|
-| `gitlab-mcp-proxy.mjs` | the proxy: node, no dependencies, listens on `127.0.0.1:3720/mcp` |
+| `gitlab-mcp-proxy.mjs` | the proxy: node, no dependencies, listens on `127.0.0.1:3721/mcp` |
 | `gitlab-mcp-proxy.sh`  | control script: `up`, `down`, `status` |
 | `gitlab-mcp-proxy.rules.json` | call-filtering rules (ships empty); read once at startup |
 
@@ -52,7 +52,7 @@ Self-managed GitLab: point the proxy at your instance before starting it —
 Quick check:
 
 ```sh
-curl -s -X POST http://127.0.0.1:3720/mcp \
+curl -s -X POST http://127.0.0.1:3721/mcp \
   -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"probe","version":"0"}}}'
 # 200 with a JSON-RPC result          = everything works
@@ -84,7 +84,7 @@ Disabled by default — enable it where you actually work on GitLab:
 "mcp": {
   "gitlab": {
     "type": "remote",
-    "url": "http://127.0.0.1:3720/mcp",
+    "url": "http://127.0.0.1:3721/mcp",
     "enabled": false
   }
 }
@@ -102,13 +102,13 @@ machine policy `~/.config/omac/sandbox-profiles/default.json`:
 
 ```json
 "network": {
-  "open_port": [3720],
+  "open_port": [3721],
   "mode": "filtered"
 }
 ```
 
 `open_port` is the omac equivalent of a forwarded port: the sandboxed process
-may connect to `127.0.0.1:3720` and nothing else on that port's terms.
+may connect to `127.0.0.1:3721` and nothing else on that port's terms.
 
 ## Why the session cannot use `glab` directly
 
@@ -120,17 +120,17 @@ may connect to `127.0.0.1:3720` and nothing else on that port's terms.
 3. **No OAuth workaround.** An interactive `mcp auth` flow cannot complete in
    the sandbox (the callback server may not bind an OS-assigned port).
 
-So the session reaches `127.0.0.1:3720` only, and the token is injected on
+So the session reaches `127.0.0.1:3721` only, and the token is injected on
 the host side, per request, where `glab` lives.
 
 ## Security notes
 
-Same model as github-mcp-proxy, port 3720:
+Same model as github-mcp-proxy, port 3721:
 
 - Token read from host `glab` per request: never on disk, never in config,
   environment, or the sandbox.
 - **The port is open to everything on this machine.** No authentication on
-  `127.0.0.1:3720`: any process running as you can act with your GitLab
+  `127.0.0.1:3721`: any process running as you can act with your GitLab
   identity. Requests carrying a browser `Origin` or `Sec-Fetch-Site` header
   are rejected with 403; that is header sniffing, not real authentication.
 - Single-user machine assumption; do not run on shared hosts.
