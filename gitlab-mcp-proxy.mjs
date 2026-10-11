@@ -75,16 +75,35 @@ http.createServer((req, res) => {
   req.on("end", () => {
     const raw = Buffer.concat(chunks)
     // Buffer requests only so tools/call can be ruled on; forward raw bytes.
-    // ponytail: JSON-RPC batches and unparseable bodies pass through untouched
+    // Every tools/call must face policy on its own - a denied call must not
+    // ride in past the rules hidden inside a batch or behind a bad body.
     let reason = null
     let id = null
-    try {
-      const body = JSON.parse(raw)
-      if (!Array.isArray(body)) {
+    let body = null
+    if (raw.length) {
+      try {
+        body = JSON.parse(raw.toString("utf8"))
+      } catch {
+        // Non-empty body that is not one JSON value: not a valid MCP request,
+        // and unscannable = unverifiable. Refuse instead of forwarding blind.
+        reason = "unparseable body"
+      }
+    }
+    if (body && typeof body === "object") {
+      if (Array.isArray(body)) {
+        const calls = body.filter((m) => m && m.method === "tools/call")
+        for (const c of calls) {
+          const r = blockedReason(c)
+          if (r) {
+            reason = `batch hides a tools/call (${r})`
+            break
+          }
+        }
+      } else {
         reason = blockedReason(body)
         id = body?.id ?? null
       }
-    } catch {}
+    }
     if (reason) {
       console.log(`${new Date().toISOString()} blocked tools/call: ${reason}`)
       res.writeHead(200, { "content-type": "application/json" })

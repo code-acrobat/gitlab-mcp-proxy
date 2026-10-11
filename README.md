@@ -182,8 +182,10 @@ currently answers `403 ... not enabled`, so the live tool names could not
 be verified from this setup, and shipping unverified names would produce
 rules that never match. Fill the file once `tools/list` answers.
 
-Scope: MCP path only — shell `glab` calls bypass the proxy entirely, and
-JSON-RPC batches pass through untouched.
+Scope: MCP path only — shell `glab` calls bypass the proxy entirely.
+Request bodies fail closed: a JSON-RPC batch containing any `tools/call`
+is checked call by call (one denied call blocks the whole batch), and a
+non-empty body that does not parse as JSON is refused.
 
 ## Production safeguards
 
@@ -242,6 +244,16 @@ This is a concept study: `glab` already covers the GitLab API surface for
 day-to-day work, and bespoke scripts wrapping that same API go further
 still. The proxy exists only to give MCP clients a loopback endpoint with
 host-side token injection inside sandboxes.
+
+## Related projects
+
+- [kubernetes-mcp-proxy](https://github.com/code-acrobat/kubernetes-mcp-proxy):
+  the same loopback-policy idea for the Kubernetes MCP server, with a
+  harder guarantee set (namespace scoping, response filtering, startup
+  schema lock) and a thorough published adversarial test (its
+  `ADVERSARIAL-TESTS.md`). This proxy and its GitHub sibling were set up
+  on the same principles; an equivalent adversarial pass for both is
+  planned.
 
 ## License
 
