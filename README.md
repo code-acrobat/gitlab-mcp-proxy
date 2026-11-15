@@ -42,7 +42,7 @@ gitlab-mcp-proxy.sh status    # prints pid + probes the port (exit 1 = down)
 gitlab-mcp-proxy.sh down
 ```
 
-Log: `/tmp/opencode/gitlab-mcp-proxy.log` (startup lines and blocked
+Log: `~/.local/state/gitlab-mcp-proxy/gitlab-mcp-proxy.log` (startup lines and blocked
 calls). Started by
 hand on purpose: no systemd unit, it dies on reboot or logout, so run `up`
 again after one.

@@ -3,7 +3,7 @@
 set -u
 SELF=gitlab-mcp-proxy.mjs
 PORT=3721
-LOG=/tmp/opencode/gitlab-mcp-proxy.log
+LOG=${XDG_STATE_HOME:-$HOME/.local/state}/gitlab-mcp-proxy/gitlab-mcp-proxy.log
 
 # match the proxy process only: argv[0] ends in `node` (mise shim execs the
 # real binary path), argv[1] is exactly this script; a shell running
